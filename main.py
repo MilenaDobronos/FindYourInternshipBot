@@ -2,17 +2,12 @@
 # -*- coding: utf-8 -*-
 
 API_TOKEN = '5438532763:AAERw6gERRol9iAfWbF7FLOFz9-rZK-Pab0'
-import os
+
 import telebot
 from telebot import types
 import pandas as pd
 
-def get_internships(field, degree, region):
-    df = pd.read_excel(os.getcwd()'/data.xlsx', sheet_name=field)
-    if field == 'school':
-        return df
-    else:
-        return df.loc[(df['region'] == region) & (df['degree'].str.contains(degree))]
+from get_int import get_internships
 
 
 bot = telebot.TeleBot(API_TOKEN)
@@ -25,6 +20,8 @@ country = ''
 
 @bot.message_handler(commands=["start"])
 def start(message):
+    if message.text.strip()=='Stop':
+        return None
     bot.send_message(message.chat.id, 'Hi!\nThis bot is designed to help you find opportunities abroad')
     markup=types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
     item1=types.KeyboardButton("Biomedical")
@@ -111,16 +108,22 @@ def get_country(message):
     bot.send_message(message.chat.id, 'Searching...')
     df_selected = get_internships(field, degree, region)
     df_selected = df_selected.reset_index()
-    for i in range(len(df_selected)):
-        if field=='school':
-            bot.send_message(message.chat.id, '# ' + str(i+1) + str('\n*Name:*\n') + str(df_selected.loc[i, "name"]) + '\n*Link:*\n'  + str(df_selected.loc[i, "link"]) + '\n*Field:*\n' + str(df_selected.loc[i, "field"])+ '\n*Country:*\n' + str(df_selected.loc[i, "country"])+ '\n*Degree:*\n' + str(df_selected.loc[i, "degree"])+ '\n*Dates:*\n' + str(df_selected.loc[i, "begin"])+ '\n' + str(df_selected.loc[i, "end"])+ '\n*Allowance:*\n' + str(df_selected.loc[i, "allowance"])+ '\n*Deadline:*\n' + str(df_selected.loc[i, "deadline"]), parse_mode= 'Markdown')
-        else:
-            bot.send_message(message.chat.id, '# ' + str(i+1) + str('\n*Name:*\n') + str(df_selected.loc[i, "name"]) + '\n*Link:*\n'  + str(df_selected.loc[i, "link"]) + '\n*Country:*\n' + str(df_selected.loc[i, "country"])+ '\n*Dates:*\n' + str(df_selected.loc[i, "begin"])+ '\n' + str(df_selected.loc[i, "end"])+ '\n*Allowance:*\n' + str(df_selected.loc[i, "allowance"])+ '\n*Deadline:*\n' + str(df_selected.loc[i, "deadline"]), parse_mode= 'Markdown')
-        
-    bot.send_message(message.chat.id, 'Im afraid I have no more options for you\n\nThanks for using the bot!\nTo find out more about international internships, please examine the table compiled by Victoria Korzhova: \n https://docs.google.com/spreadsheets/d/1rY4nZmy6qcOxmH51qCw1TNtDxcbVhjEtIPEGFLEzDwc/edit#gid=1079784321\n\nHave a nice day 🌸')
+    
+    if len(df_selected) == 0:
+        bot.send_message(message.chat.id, 'Im afraid I have no options for you\n\nPlease try another search')
+    else:
+        for i in range(len(df_selected)):
+            if field=='school':
+                bot.send_message(message.chat.id, '# ' + str(i+1) + str('\n*Name:*\n') + str(df_selected.loc[i, "name"]) + '\n*Link:*\n'  + str(df_selected.loc[i, "link"]) + '\n*Field:*\n' + str(df_selected.loc[i, "field"])+ '\n*Country:*\n' + str(df_selected.loc[i, "country"])+ '\n*Degree:*\n' + str(df_selected.loc[i, "degree"])+ '\n*Dates:*\n' + str(df_selected.loc[i, "begin"])+ '\n' + str(df_selected.loc[i, "end"])+ '\n*Allowance:*\n' + str(df_selected.loc[i, "allowance"])+ '\n*Deadline:*\n' + str(df_selected.loc[i, "deadline"]), parse_mode= 'Markdown')
+            else:
+                bot.send_message(message.chat.id, '# ' + str(i+1) + str('\n*Name:*\n') + str(df_selected.loc[i, "name"]) + '\n*Link:*\n'  + str(df_selected.loc[i, "link"]) + '\n*Country:*\n' + str(df_selected.loc[i, "country"])+ '\n*Dates:*\n' + str(df_selected.loc[i, "begin"])+ '\n' + str(df_selected.loc[i, "end"])+ '\n*Allowance:*\n' + str(df_selected.loc[i, "allowance"])+ '\n*Deadline:*\n' + str(df_selected.loc[i, "deadline"]), parse_mode= 'Markdown')
+        bot.send_message(message.chat.id, 'Im afraid I have no more options for you\n\nThanks for using the bot!\nTo find out more about international internships, please examine the table compiled by Victoria Korzhova: \n https://docs.google.com/spreadsheets/d/1rY4nZmy6qcOxmH51qCw1TNtDxcbVhjEtIPEGFLEzDwc/edit#gid=1079784321\n\nHave a nice day 🌸')
+    
     markup=types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
     item1=types.KeyboardButton("Start")
+    item2=types.KeyboardButton("Stop")
     markup.add(item1)
+    markup.add(item2)
     bot.send_message(message.chat.id, 'Start again:',  reply_markup=markup)
     bot.register_next_step_handler(message, start)
 
