@@ -5,10 +5,8 @@ API_TOKEN = '5438532763:AAERw6gERRol9iAfWbF7FLOFz9-rZK-Pab0'
 
 import telebot
 from telebot import types
-import pandas as pd
 
 from get_int import get_internships
-
 
 bot = telebot.TeleBot(API_TOKEN)
 
